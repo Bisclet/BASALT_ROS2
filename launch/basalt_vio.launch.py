@@ -31,20 +31,14 @@ def generate_launch_description():
     
     cam_calib_arg = DeclareLaunchArgument(
         'cam_calib',
-        default_value='/workspaces/cocoro/src/basalt/data/tumvi_512_ds_calib.json',
+        default_value='',
         description='Path to camera calibration JSON file'
     )
     
     config_path_arg = DeclareLaunchArgument(
         'config_path',
-        default_value='/workspaces/cocoro/src/basalt/data/tumvi_512_config.json',
+        default_value='',
         description='Path to VIO configuration JSON file'
-    )
-    
-    num_threads_arg = DeclareLaunchArgument(
-        'num_threads',
-        default_value='4',
-        description='Number of threads for VIO processing'
     )
 
     # Create the node
@@ -60,7 +54,6 @@ def generate_launch_description():
             'odometry_topic': LaunchConfiguration('odometry_topic'),
             'cam_calib': LaunchConfiguration('cam_calib'),
             'config_path': LaunchConfiguration('config_path'),
-            'num_threads': LaunchConfiguration('num_threads'),
         }]
     )
 
@@ -71,6 +64,5 @@ def generate_launch_description():
         odometry_topic_arg,
         cam_calib_arg,
         config_path_arg,
-        num_threads_arg,
         basalt_vio_node
     ])

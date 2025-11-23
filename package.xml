@@ -14,6 +14,7 @@
   
   <author email="vlad.usenko@tum.de">Vladyslav Usenko</author>
   <author>Nikolaus Demmel</author>
+  <author email="vicente.serna@horyzn.org">Vicente Serna Adame</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   

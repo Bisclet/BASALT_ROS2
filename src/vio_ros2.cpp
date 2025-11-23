@@ -181,7 +181,7 @@ class BasaltVIO : public rclcpp::Node{
         std::string left_topic_, right_topic_, imu_topic_, odom_topic_, cam_calib, config_path;
         std::atomic<bool> terminate = false;
 
-        int num_threads, counter;
+        int counter;
 
         tbb::concurrent_bounded_queue<basalt::PoseVelBiasState<double>::Ptr>
             out_state_queue;
@@ -332,7 +332,6 @@ class BasaltVIO : public rclcpp::Node{
             declare_parameter<std::string>("odometry_topic",    "/orb_slam/odom");
             declare_parameter<std::string>("cam_calib",      "file_not_set");
             declare_parameter<std::string>("config_path", "file_not_set");
-            declare_parameter<int>("num_threads", 1);
             
 
             left_topic_     = get_parameter("left_image_topic").as_string();
@@ -341,7 +340,6 @@ class BasaltVIO : public rclcpp::Node{
             odom_topic_     = get_parameter("odometry_topic").as_string();
             cam_calib       = get_parameter("cam_calib").as_string();
             config_path  = get_parameter("config_path").as_string();
-            num_threads = get_parameter("num_threads").as_int();
 
 
             imu_sub_ = this->create_subscription<Imu>(

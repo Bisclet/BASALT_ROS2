@@ -1,75 +1,74 @@
-[![pipeline status](https://gitlab.com/VladyslavUsenko/basalt/badges/master/pipeline.svg)](https://gitlab.com/VladyslavUsenko/basalt/commits/master)
+## Basalt ROS2 Wrapper
 
-## Basalt
-For more information see https://vision.in.tum.de/research/vslam/basalt
+This is a ROS2 wrapper for the Basalt VIO pipeline. Its only purpose is to extend the Basalt code base with ROS2 compatibility. For more information about the original project and standalone applications, see: https://github.com/VladyslavUsenko/basalt-mirror
 
-![teaser](doc/img/teaser.png)
+## Requisites
 
-This project contains tools for:
-* Camera, IMU and motion capture calibration.
-* Visual-inertial odometry and mapping.
-* Simulated environment to test different components of the system.
-
-Some reusable components of the system are available as a separate [header-only library](https://gitlab.com/VladyslavUsenko/basalt-headers) ([Documentation](https://vladyslavusenko.gitlab.io/basalt-headers/)).
-
-There is also a [Github mirror](https://github.com/VladyslavUsenko/basalt-mirror) of this project to enable easy forking.
-
-## Related Publications
-Visual-Inertial Odometry and Mapping:
-* **Visual-Inertial Mapping with Non-Linear Factor Recovery**, V. Usenko, N. Demmel, D. Schubert, J. Stückler, D. Cremers, In IEEE Robotics and Automation Letters (RA-L) [[DOI:10.1109/LRA.2019.2961227]](https://doi.org/10.1109/LRA.2019.2961227) [[arXiv:1904.06504]](https://arxiv.org/abs/1904.06504).
-
-Calibration (explains implemented camera models):
-* **The Double Sphere Camera Model**, V. Usenko and N. Demmel and D. Cremers, In 2018 International Conference on 3D Vision (3DV), [[DOI:10.1109/3DV.2018.00069]](https://doi.org/10.1109/3DV.2018.00069), [[arXiv:1807.08957]](https://arxiv.org/abs/1807.08957).
-
-Calibration (demonstrates how these tools can be used for dataset calibration):
-* **The TUM VI Benchmark for Evaluating Visual-Inertial Odometry**, D. Schubert, T. Goll,  N. Demmel, V. Usenko, J. Stückler, D. Cremers, In 2018 International Conference on Intelligent Robots and Systems (IROS), [[DOI:10.1109/IROS.2018.8593419]](https://doi.org/10.1109/IROS.2018.8593419), [[arXiv:1804.06120]](https://arxiv.org/abs/1804.06120).
-
-Calibration (describes B-spline trajectory representation used in camera-IMU calibration):
-* **Efficient Derivative Computation for Cumulative B-Splines on Lie Groups**, C. Sommer, V. Usenko, D. Schubert, N. Demmel, D. Cremers, In 2020 Conference on Computer Vision and Pattern Recognition (CVPR), [[DOI:10.1109/CVPR42600.2020.01116]](https://doi.org/10.1109/CVPR42600.2020.01116), [[arXiv:1911.08860]](https://arxiv.org/abs/1911.08860).
-
-Optimization (describes square-root optimization and marginalization used in VIO/VO):
-* **Square Root Marginalization for Sliding-Window Bundle Adjustment**, N. Demmel, D. Schubert, C. Sommer, D. Cremers, V. Usenko, In 2021 International Conference on Computer Vision (ICCV), [[arXiv:2109.02182]](https://arxiv.org/abs/2109.02182)
-
-
-## Installation
-### APT installation for Ubuntu 22.04, 20.04 and 18.04 (Fast)
-Set up keys, add the repository to the sources list, update the Ubuntu package index and install Basalt:
-```
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0AD9A3000D97B6C9
-sudo sh -c 'echo "deb [arch=amd64] http://packages.usenko.net/ubuntu $(lsb_release -sc) $(lsb_release -sc)/main" > /etc/apt/sources.list.d/basalt.list'
-sudo apt-get update
-sudo apt-get dist-upgrade
-sudo apt-get install basalt
-```
-
-### Source installation for Ubuntu >= 18.04 and MacOS >= 10.14 Mojave
-Clone the source code for the project and build it. For MacOS you should have [Homebrew](https://brew.sh/) installed.
-```
-git clone --recursive https://gitlab.com/VladyslavUsenko/basalt.git
-cd basalt
-./scripts/install_deps.sh
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-make -j8
-```
+- Ubuntu 22+
+- ROS2 Humble
 
 ## Usage
-* [Camera, IMU and Mocap calibration. (TUM-VI, Euroc, UZH-FPV and Kalibr datasets)](doc/Calibration.md)
-* [Visual-inertial odometry and mapping. (TUM-VI and Euroc datasets)](doc/VioMapping.md)
-* [Visual odometry (no IMU). (KITTI dataset)](doc/Vo.md)
-* [Simulation tools to test different components of the system.](doc/Simulation.md)
-* [Batch evaluation tutorial (ICCV'21 experiments)](doc/BatchEvaluation.md)
 
-## Device support
-* [Tutorial on Camera-IMU and Motion capture calibration with Realsense T265.](doc/Realsense.md)
+Build the package
+```bash
+    cd /your/workspace/src
+    git clone --recursive https://github.com/Bisclet/BASALT_ROS2.git
+    cd BASALT_ROS2
+    ./scripts/install_deps.sh
+    cd /your/workspace
+    colcon build
+    source install/setup.bash
+```
 
-## Development
-* [Development environment setup.](doc/DevSetup.md)
+## How to Launch
 
-## Licence
-The code is provided under a BSD 3-clause license. See the LICENSE file for details.
-Note also the different licenses of thirdparty submodules.
+This launch file starts the Basalt VIO ROS2 node and exposes several launch arguments for configuring input topics and file paths.
 
-Some improvements are ported back from the fork
-[granite](https://github.com/DLR-RM/granite) (MIT license).
+### Running With Custom Topics or Paths
+
+You can override launch arguments at runtime:
+```bash
+    ros2 launch basalt basalt_vio.launch.py \
+        left_image_topic:=<left_cam_topic> \
+        right_image_topic:=<right_cam_topic> \
+        imu_topic:=<imu_topic> \
+        odometry_topic:=<output_odom_topic> \
+        cam_calib:=</path/to/cam_calib.json> \
+        config_path:=</path/to/config.json>
+```
+### Example for TUM-VI-512
+Assuming you are in the root of your workspace, where your build and install folders are.
+```bash
+    ros2 launch basalt basalt_vio.launch.py \
+        left_image_topic:=/cam0/image_raw \
+        right_image_topic:=/cam1/image_raw \
+        imu_topic:=/imu0 \
+        odometry_topic:=/basalt/odom \
+        cam_calib:=$(realpath ./install/basalt/share/basalt/config/tumvi_512_ds_calib.json) \
+        config_path:=$(realpath ./install/basalt/share/basalt/config/tumvi_512_config.json)
+```
+Then run your TUM-VI-512 rosbag.
+
+### Launch Arguments
+
+left_image_topic  
+Topic for the left camera image.
+
+right_image_topic  
+Topic for the right camera image.
+
+imu_topic  
+Topic for IMU messages.
+
+odometry_topic  
+Topic where Basalt publishes estimated odometry.
+
+cam_calib  
+Path to the camera calibration JSON file.
+
+config_path  
+Path to the Basalt VIO configuration JSON file.
+
+
+### WARNING
+This wrapper is highly experimental, it does not guarantee stability at high frame rates and does not provide any calibration tools. For more information visit https://github.com/VladyslavUsenko/basalt-mirror. 
