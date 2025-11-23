@@ -400,73 +400,97 @@ target_compile_definitions(basalt PUBLIC ${BASALT_COMPILE_DEFINITIONS})
 #target_compile_definitions(basalt PUBLIC BASALT_DISABLE_ASSERTS)
 
 
-add_executable(basalt_calibrate src/calibrate.cpp src/calibration/cam_calib.cpp)
-target_link_libraries(basalt_calibrate basalt pangolin basalt::cli11)
+#add_executable(basalt_calibrate src/calibrate.cpp src/calibration/cam_calib.cpp)
+#target_link_libraries(basalt_calibrate basalt pangolin basalt::cli11)
 
-add_executable(basalt_calibrate_imu src/calibrate_imu.cpp src/calibration/cam_imu_calib.cpp)
-target_link_libraries(basalt_calibrate_imu basalt pangolin basalt::cli11)
+#add_executable(basalt_calibrate_imu src/calibrate_imu.cpp src/calibration/cam_imu_calib.cpp)
+#target_link_libraries(basalt_calibrate_imu basalt pangolin basalt::cli11)
 
 
-add_executable(basalt_vio_sim src/vio_sim.cpp)
-target_link_libraries(basalt_vio_sim basalt pangolin basalt::cli11)
+#add_executable(basalt_vio_sim src/vio_sim.cpp)
+#target_link_libraries(basalt_vio_sim basalt pangolin basalt::cli11)
 
-add_executable(basalt_mapper_sim src/mapper_sim.cpp)
-target_link_libraries(basalt_mapper_sim basalt pangolin basalt::cli11)
+#add_executable(basalt_mapper_sim src/mapper_sim.cpp)
+#target_link_libraries(basalt_mapper_sim basalt pangolin basalt::cli11)
 
 # mapper sim native doesn't use template free interface
-if(BASALT_INSTANTIATIONS_DOUBLE)
-  add_executable(basalt_mapper_sim_naive src/mapper_sim_naive.cpp)
-  target_link_libraries(basalt_mapper_sim_naive basalt pangolin basalt::cli11)
-endif()
+#if(BASALT_INSTANTIATIONS_DOUBLE)
+#  add_executable(basalt_mapper_sim_naive src/mapper_sim_naive.cpp)
+#  target_link_libraries(basalt_mapper_sim_naive basalt pangolin basalt::cli11)
+#endif()
 
-add_executable(basalt_mapper src/mapper.cpp)
-target_link_libraries(basalt_mapper basalt pangolin basalt::cli11)
+#add_executable(basalt_mapper src/mapper.cpp)
+#target_link_libraries(basalt_mapper basalt pangolin basalt::cli11)
 
 
-add_executable(basalt_opt_flow src/opt_flow.cpp)
-target_link_libraries(basalt_opt_flow basalt pangolin basalt::cli11)
+#add_executable(basalt_opt_flow src/opt_flow.cpp)
+#target_link_libraries(basalt_opt_flow basalt pangolin basalt::cli11)
 
 add_executable(basalt_vio src/vio.cpp)
 target_link_libraries(basalt_vio basalt pangolin basalt::cli11)
 
-add_executable(basalt_time_alignment src/time_alignment.cpp)
-target_link_libraries(basalt_time_alignment basalt pangolin basalt::cli11)
 
-add_executable(basalt_kitti_eval src/kitti_eval.cpp)
-target_link_libraries(basalt_kitti_eval basalt::basalt-headers basalt::cli11)
+#add_executable(basalt_time_alignment src/time_alignment.cpp)
+#target_link_libraries(basalt_time_alignment basalt pangolin basalt::cli11)
 
+#add_executable(basalt_kitti_eval src/kitti_eval.cpp)
+#target_link_libraries(basalt_kitti_eval basalt::basalt-headers basalt::cli11)
+
+#=======================
+## ROS2 WRAPPER
+#=======================
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(message_filters REQUIRED)
+find_package(OpenCV REQUIRED)
+
+add_executable(basalt_vio_ros2 src/vio_ros2.cpp)
+
+# Link libraries
+target_link_libraries(basalt_vio_ros2 
+  basalt 
+  pangolin 
+  basalt::cli11
+)
+
+# Link ROS2 dependencies using ament_target_dependencies
+ament_target_dependencies(basalt_vio_ros2
+  rclcpp
+  std_msgs
+  nav_msgs
+  sensor_msgs
+  cv_bridge
+  message_filters
+  OpenCV
+)
+
+#=======================
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
   target_link_libraries(basalt_rs_t265_record basalt realsense2::realsense2 pangolin basalt::cli11)
-
+  
   add_executable(basalt_rs_t265_vio src/rs_t265_vio.cpp src/device/rs_t265.cpp)
   target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2 pangolin basalt::cli11)
 endif()
 
+#install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapper_sim basalt_mapper basalt_opt_flow basalt_vio basalt_kitti_eval basalt_time_alignment basalt
+#  EXPORT BasaltTargets
+#  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+#  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+#  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
-
-install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapper_sim basalt_mapper basalt_opt_flow basalt_vio basalt_kitti_eval basalt_time_alignment basalt
+install(TARGETS basalt_vio basalt_vio_ros2 basalt
   EXPORT BasaltTargets
   RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
-if(BASALT_INSTANTIATIONS_DOUBLE)
-  install(TARGETS basalt_mapper_sim_naive
-    EXPORT BasaltTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-endif()
 
-if(realsense2_FOUND)
-    install(TARGETS basalt_rs_t265_record basalt_rs_t265_vio
-      EXPORT BasaltTargets
-      RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-      LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-      ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-endif()
 
 file(GLOB SCRIPTS_TO_INSTALL "${CMAKE_CURRENT_SOURCE_DIR}/scripts/basalt_*.py")
 install(PROGRAMS ${SCRIPTS_TO_INSTALL} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
@@ -475,15 +499,3 @@ file(GLOB CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/*.json")
 install(FILES ${CONFIG_FILES}
   DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt)
 
-
-# Replace install() to do-nothing macro.
-macro(install)
-endmacro()
-# Include subproject (or any other CMake code) with "disabled" install().
-enable_testing()
-add_subdirectory(thirdparty/basalt-headers/test)
-add_subdirectory(test)
-# Restore original install() behavior.
-macro(install)
-  _install(${ARGN})
-endmacro()

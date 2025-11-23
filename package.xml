@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>basalt</name>
+  <version>0.1.0</version>
+  <description>Basalt Visual-Inertial Odometry ROS2 wrapper</description>
+  
+  <maintainer email="vlad.usenko@tum.de">Vladyslav Usenko</maintainer>
+  
+  <license>BSD-3-Clause</license>
+  
+  <url type="website">https://gitlab.com/VladyslavUsenko/basalt</url>
+  <url type="repository">https://gitlab.com/VladyslavUsenko/basalt.git</url>
+  
+  <author email="vlad.usenko@tum.de">Vladyslav Usenko</author>
+  <author>Nikolaus Demmel</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <!-- ROS2 dependencies -->
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>message_filters</depend>
+  
+  <!-- System dependencies -->
+  <depend>eigen</depend>
+  <depend>opencv</depend>
+  <depend>fmt</depend>
+  <depend>tbb</depend>
+  
+  <!-- Build dependencies -->
+  <build_depend>libtbb-dev</build_depend>
+  <build_depend>libopencv-dev</build_depend>
+  <build_depend>libfmt-dev</build_depend>
+  
+  <!-- Execution dependencies -->
+  <exec_depend>libtbb2</exec_depend>
+  <exec_depend>libopencv-dev</exec_depend>
+  <exec_depend>libfmt-dev</exec_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
