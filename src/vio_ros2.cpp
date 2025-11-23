@@ -176,7 +176,7 @@ class BasaltVIO : public rclcpp::Node{
         basalt::OpticalFlowBase::Ptr opt_flow_ptr;
         basalt::VioEstimatorBase::Ptr vio;
 
-        basalt::PoseVelBiasState<double>::Ptr data;
+        
 
         std::string left_topic_, right_topic_, imu_topic_, odom_topic_, cam_calib, config_path;
         std::atomic<bool> terminate = false;
@@ -223,8 +223,13 @@ class BasaltVIO : public rclcpp::Node{
                 return;
             }
             
-            basalt::ImuData<double>::Ptr data(new basalt::ImuData<double>);
-            data->t_ns = (int64_t)msg->header.stamp.nanosec;
+            auto stamp = msg->header.stamp;
+            int64_t t_ns =
+                static_cast<int64_t>(stamp.sec) * 1000000000LL +
+                static_cast<int64_t>(stamp.nanosec);
+
+            auto data = basalt::ImuData<double>::Ptr(new basalt::ImuData<double>);
+            data->t_ns = t_ns;
             
             data->accel << msg->linear_acceleration.x, 
                         msg->linear_acceleration.y, 
@@ -244,8 +249,12 @@ class BasaltVIO : public rclcpp::Node{
                 return;
             }
             
-            basalt::OpticalFlowInput::Ptr data(new basalt::OpticalFlowInput);
-            int64_t t_ns = left->header.stamp.nanosec;
+            auto stamp = left->header.stamp;
+            int64_t t_ns =
+                static_cast<int64_t>(stamp.sec) * 1000000000LL +
+                static_cast<int64_t>(stamp.nanosec);
+
+            auto data = basalt::OpticalFlowInput::Ptr(new basalt::OpticalFlowInput);
             data->t_ns = t_ns;
             
             // Convert ROS images to basalt ImageData format
@@ -312,6 +321,7 @@ class BasaltVIO : public rclcpp::Node{
                 os.close();
                 }
             }
+            RCLCPP_INFO(get_logger(), "Finished setup");
         }
 
     public:
@@ -336,7 +346,7 @@ class BasaltVIO : public rclcpp::Node{
 
             imu_sub_ = this->create_subscription<Imu>(
                 imu_topic_,
-                rclcpp::SensorDataQoS().best_effort().keep_last(400),
+                rclcpp::SensorDataQoS().reliable().keep_last(400),
                 std::bind(&BasaltVIO::imu_callback, this, _1)
             );
 
@@ -351,9 +361,10 @@ class BasaltVIO : public rclcpp::Node{
 
 
             timer_ = this->create_wall_timer(
-                std::chrono::milliseconds(2),
+                std::chrono::milliseconds(20),
                 [this]() {
-                    out_state_queue.pop(data);
+                    basalt::PoseVelBiasState<double>::Ptr data;
+                    out_state_queue.try_pop(data);
 
                     if (!data.get()) { return;}
 
@@ -385,38 +396,45 @@ class BasaltVIO : public rclcpp::Node{
 
                     odom_pub_->publish(odom_msg);
 
-                    vio_t_ns.emplace_back(data->t_ns);
-                    vio_t_w_i.emplace_back(T_w_i.translation());
-                    vio_T_w_i.emplace_back(T_w_i);
+                    //vio_t_ns.emplace_back(data->t_ns);
+                    //vio_t_w_i.emplace_back(T_w_i.translation());
+                    //vio_T_w_i.emplace_back(T_w_i);
                 }
             );
+
+            RCLCPP_INFO(get_logger(), "Node starting...");
         }
 };
 
 int main(int argc, char** argv) {
-    // Initialize ROS2
     rclcpp::init(argc, argv);
-    
+
     try {
-        // Create the BasaltVIO node
         auto node = std::make_shared<BasaltVIO>();
-        
+
         RCLCPP_INFO(node->get_logger(), "BasaltVIO node started");
         RCLCPP_INFO(node->get_logger(), "Waiting for sensor data...");
+
+        // Configure executor with number of threads
+        rclcpp::executors::MultiThreadedExecutor executor(
+            rclcpp::ExecutorOptions(),
+            4  // Number of threads - adjust based on your needs
+        );
         
-        // Spin the node to process callbacks
-        rclcpp::spin(node);
-        
+        executor.add_node(node);
+        executor.spin();
+
         RCLCPP_INFO(node->get_logger(), "BasaltVIO node shutting down");
-        
+
     } catch (const std::exception& e) {
-        RCLCPP_ERROR(rclcpp::get_logger("BasaltVIO"), "Exception in main: %s", e.what());
+        RCLCPP_ERROR(
+            rclcpp::get_logger("BasaltVIO"),
+            "Exception in main: %s", e.what()
+        );
         rclcpp::shutdown();
         return 1;
     }
-    
-    // Shutdown ROS2
+
     rclcpp::shutdown();
-    
     return 0;
 }

@@ -469,6 +469,8 @@ ament_target_dependencies(basalt_vio_ros2
 )
 
 #=======================
+## REALSENSE SUPPORT
+#=======================
 find_package(realsense2 QUIET)
 if(realsense2_FOUND)
   add_executable(basalt_rs_t265_record src/rs_t265_record.cpp src/device/rs_t265.cpp)
@@ -478,24 +480,49 @@ if(realsense2_FOUND)
   target_link_libraries(basalt_rs_t265_vio basalt realsense2::realsense2 pangolin basalt::cli11)
 endif()
 
-#install(TARGETS basalt_calibrate basalt_calibrate_imu basalt_vio_sim basalt_mapper_sim basalt_mapper basalt_opt_flow basalt_vio basalt_kitti_eval basalt_time_alignment basalt
-#  EXPORT BasaltTargets
-#  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-#  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-#  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+#=======================
+## INSTALL TARGETS
+#=======================
 
-install(TARGETS basalt_vio basalt_vio_ros2 basalt
+# Install ROS2 executable to ROS2-compatible location
+install(TARGETS basalt_vio_ros2
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the basalt library
+install(TARGETS basalt
   EXPORT BasaltTargets
-  RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
 
+# Install other basalt executables (non-ROS2)
+install(TARGETS basalt_vio
+  DESTINATION bin
+)
 
-
+# Install scripts
 file(GLOB SCRIPTS_TO_INSTALL "${CMAKE_CURRENT_SOURCE_DIR}/scripts/basalt_*.py")
-install(PROGRAMS ${SCRIPTS_TO_INSTALL} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(PROGRAMS ${SCRIPTS_TO_INSTALL} 
+  DESTINATION lib/${PROJECT_NAME}
+)
 
+# Install config files
 file(GLOB CONFIG_FILES "${CMAKE_CURRENT_SOURCE_DIR}/data/*.json")
 install(FILES ${CONFIG_FILES}
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/basalt)
+  DESTINATION share/${PROJECT_NAME}/config
+)
 
+#=======================
+## ROS2 AMENT SETUP
+#=======================
+
+# Install launch files
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# This MUST be the last line in CMakeLists.txt for ROS2 packages
+ament_package()
