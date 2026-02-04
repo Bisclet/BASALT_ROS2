@@ -344,12 +344,15 @@ class BasaltVIO : public rclcpp::Node{
 
             imu_sub_ = this->create_subscription<Imu>(
                 imu_topic_,
-                rclcpp::SensorDataQoS().reliable().keep_last(400),
+                rclcpp::SensorDataQoS().keep_last(400),
                 std::bind(&BasaltVIO::imu_callback, this, _1)
             );
 
-            left_sub_.subscribe(this, left_topic_);
-            right_sub_.subscribe(this, right_topic_);
+            rclcpp::QoS qos = rclcpp::SensorDataQoS();
+
+            left_sub_.subscribe(this, left_topic_, qos.get_rmw_qos_profile());
+            right_sub_.subscribe(this, right_topic_, qos.get_rmw_qos_profile());
+
             sync_ = std::make_shared<Synchronizer<SyncPolicy>>(SyncPolicy(10), left_sub_, right_sub_);
             sync_->registerCallback(std::bind(&BasaltVIO::stereo_callback, this, _1, _2));
 
