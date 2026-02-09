@@ -356,7 +356,13 @@ class BasaltVIO : public rclcpp::Node{
             sync_ = std::make_shared<Synchronizer<SyncPolicy>>(SyncPolicy(10), left_sub_, right_sub_);
             sync_->registerCallback(std::bind(&BasaltVIO::stereo_callback, this, _1, _2));
 
-            odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, rclcpp::SensorDataQoS());
+            rclcpp::QoS qosi(rclcpp::KeepLast(10));
+            qosi.reliable();
+            qosi.durability_volatile();
+
+            odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
+                odom_topic_, qosi);
+
         
             setup();
 
